@@ -4,7 +4,7 @@ const ErrorResponse = require("../utils/errorResponse");
 const asyncHandler = require("../middleware/async");
 const Song = require("../models/Song");
 const User = require("../models/User");
-const getMP3Duration = require("get-mp3-duration");
+const { getAudioDurationInSeconds } = require("get-audio-duration");
 
 // @desc    Create Song/
 // @route   POST/api/v1/auth/
@@ -66,9 +66,12 @@ exports.createSong = asyncHandler(async (req, res, next) => {
   req.body.user = user._id;
 
   console.log(req.body.song);
-  const buffer = fs.readFileSync(`public/uploads${req.body.song}`);
-  const duration = getMP3Duration(buffer);
-  console.log(duration);
+  // From a local path...
+  getAudioDurationInSeconds(`public/uploads${req.body.song}`).then(
+    (duration) => {
+      console.log(duration / 60);
+    }
+  );
 
   //   const data = await Song.create(req.body);
   //   res.status(201).json({
