@@ -4,6 +4,7 @@ const ErrorResponse = require("../utils/errorResponse");
 const asyncHandler = require("../middleware/async");
 const Song = require("../models/Song");
 const User = require("../models/User");
+const Trending = require("../models/Trending");
 const { getAudioDurationInSeconds } = require("get-audio-duration");
 
 // @desc    Create Song/
@@ -153,17 +154,75 @@ exports.likedSongs = asyncHandler(async (req, res, next) => {
 // @access   Public
 exports.updatePlay = asyncHandler(async (req, res, next) => {
   const song = await Song.findById(req.params.id);
+
+  // get Week
+  const currentDate = new Date();
+  const startDate = new Date(currentDate.getFullYear(), 0, 1);
+  const days = Math.floor((currentDate - startDate) / (24 * 60 * 60 * 1000));
+  const weekNumber = Math.ceil(days / 7);
+  const year = currentDate.getFullYear();
+  const week = `Week: ${weekNumber} ${year}`;
+
   await Song.findByIdAndUpdate(
     song._id,
     {
-      play: song.play + 1,
+      play: song.stream + 1,
     },
     {
       new: true,
       runValidators: true,
     }
   );
-  console.log(song.play);
+
+  const trends = await Trending.find();
+  const filterTrends = trends?.find((x) => x.song?.week === week);
+  //const songs = filterTrends.song.week;
+  //const exist = songs.find((x) => x == req.params.id);
+
+  // song: {
+  //     week: { type: String },
+  //     songs: [
+  //       {
+  //         type: mongoose.Schema.ObjectId,
+  //         ref: "Song",
+  //         required: [true, "Please enter Song"],
+  //       },
+  //     ],
+  //   }
+
+  console.log(trends, "trends");
+  console.log(filterTrends, "filter");
+
+  // if (trends) {
+  //   if (exist) {
+  //     return res.status(200).json({
+  //       success: true,
+  //     });
+  //   }
+  //   songs.push(req.params.id);
+  //   await Trending.findByIdAndUpdate(
+  //     song._id,
+  //     {
+  //       week: songs,
+  //     },
+  //     {
+  //       new: true,
+  //       runValidators: true,
+  //     }
+  //   );
+
+  //   return res.status(200).json({
+  //     success: true,
+  //   });
+  // }
+  const data = {
+    song: {
+      week: week,
+      songs: req.params.id,
+    },
+  };
+  const tren = await Trending.create(data);
+  console.log(tren);
   res.status(200).json({
     success: true,
   });

@@ -31,7 +31,7 @@ const SongSchema = new mongoose.Schema({
     ref: "User",
     required: true,
   },
-  play: {
+  stream: {
     type: Number,
     default: 0,
   },
