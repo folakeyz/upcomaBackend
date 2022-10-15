@@ -31,6 +31,10 @@ const SongSchema = new mongoose.Schema({
     ref: "User",
     required: true,
   },
+  play: {
+    type: Number,
+    default: 0,
+  },
   createdAt: {
     type: Date,
     default: Date.now,

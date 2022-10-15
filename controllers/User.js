@@ -67,7 +67,16 @@ exports.logout = asyncHandler(async (req, res, next) => {
 // @access   Private
 
 exports.getMe = asyncHandler(async (req, res, next) => {
-  const data = await User.findById(req.user.id);
+  const data = await User.findById(req.user.id).populate([
+    {
+      path: "song",
+      select: "name album duration genre cover",
+    },
+    {
+      path: "likedSongs",
+      select: "name album duration genre cover",
+    },
+  ]);
   res.status(200).json({
     success: true,
     data,

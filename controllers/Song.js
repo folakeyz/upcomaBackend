@@ -60,24 +60,27 @@ exports.createSong = asyncHandler(async (req, res, next) => {
       }
     }
   );
-
-  req.body.cover = `/cover/${thumb.name}`;
-  req.body.song = `/songs/${file.name}`;
+  req.body.cover = `/uploads/cover/${thumb.name}`;
+  req.body.song = `/uploads/songs/${file.name}`;
   req.body.user = user._id;
-
-  console.log(req.body.song);
-  // From a local path...
-  getAudioDurationInSeconds(`public/uploads${req.body.song}`).then(
-    (duration) => {
-      console.log(duration / 60);
+  const songDuration = await getAudioDurationInSeconds(
+    `public${req.body.song}`
+  ).then((duration) => {
+    const minutes = Math.floor(duration / 60);
+    const seconds = duration % 60;
+    function padTo2Digits(num) {
+      return num.toString().padStart(2, "0");
     }
-  );
+    const result = `${padTo2Digits(minutes)}:${padTo2Digits(seconds)}`;
+    return result.slice(0, 5);
+  });
+  req.body.duration = songDuration;
 
-  //   const data = await Song.create(req.body);
-  //   res.status(201).json({
-  //     success: true,
-  //     data,
-  //   });
+  const data = await Song.create(req.body);
+  res.status(201).json({
+    success: true,
+    data,
+  });
 });
 
 // @desc    Get All Songs
@@ -85,4 +88,83 @@ exports.createSong = asyncHandler(async (req, res, next) => {
 // @access   Public
 exports.getSongs = asyncHandler(async (req, res, next) => {
   res.status(200).json(res.advancedResults);
+});
+
+// @desc    Get All Songs
+// @route   POST/api/v1/songs/
+// @access   Public
+exports.likeSong = asyncHandler(async (req, res, next) => {
+  const user = await User.findById(req.user.id);
+  if (!user) {
+    return next(new ErrorResponse("Not Found", 404));
+  }
+  const songs = user.likedSongs;
+  const exist = songs.find((x) => x == req.params.id);
+
+  if (exist) {
+    const remove = songs.filter((x) => x != req.params.id);
+    await User.findByIdAndUpdate(
+      user._id,
+      {
+        likedSongs: remove,
+      },
+      {
+        new: true,
+        runValidators: true,
+      }
+    );
+    return res.status(200).json({
+      success: true,
+      data: "Removed from Favorites",
+    });
+  } else {
+    songs.push(req.params.id);
+  }
+
+  await User.findByIdAndUpdate(
+    user._id,
+    {
+      likedSongs: songs,
+    },
+    {
+      new: true,
+      runValidators: true,
+    }
+  );
+  res.status(201).json({
+    success: true,
+    data: "Added to Favorites",
+  });
+});
+
+// @desc    Get Liked songs
+// @route   GET/api/v1/songs/like/:id
+// @access   Public
+exports.likedSongs = asyncHandler(async (req, res, next) => {
+  const user = await User.findById(req.user.id);
+  res.status(200).json({
+    success: true,
+    data: user.likedSongs,
+  });
+});
+
+// @desc    Get Liked songs
+// @route   GET/api/v1/songs/like/:id
+// @access   Public
+exports.updatePlay = asyncHandler(async (req, res, next) => {
+  const song = await Song.findById(req.params.id);
+  await Song.findByIdAndUpdate(
+    song._id,
+    {
+      play: song.play + 1,
+    },
+    {
+      new: true,
+      runValidators: true,
+    }
+  );
+  console.log(song.play);
+  res.status(200).json({
+    success: true,
+  });
 });
