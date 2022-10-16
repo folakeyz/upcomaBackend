@@ -166,7 +166,7 @@ exports.updatePlay = asyncHandler(async (req, res, next) => {
   await Song.findByIdAndUpdate(
     song._id,
     {
-      play: song.stream + 1,
+      stream: song.stream + 1,
     },
     {
       new: true,
@@ -176,45 +176,32 @@ exports.updatePlay = asyncHandler(async (req, res, next) => {
 
   const trends = await Trending.find();
   const filterTrends = trends?.find((x) => x.song?.week === week);
-  //const songs = filterTrends.song.week;
-  //const exist = songs.find((x) => x == req.params.id);
+  const songs = filterTrends.song.songs;
+  const exist = songs.find((x) => x == req.params.id);
 
-  // song: {
-  //     week: { type: String },
-  //     songs: [
-  //       {
-  //         type: mongoose.Schema.ObjectId,
-  //         ref: "Song",
-  //         required: [true, "Please enter Song"],
-  //       },
-  //     ],
-  //   }
+  if (trends) {
+    if (exist) {
+      return res.status(200).json({
+        success: true,
+      });
+    }
 
-  console.log(trends, "trends");
-  console.log(filterTrends, "filter");
+    songs.push(req.params.id);
+    const datas = {
+      song: {
+        week: week,
+        songs: songs,
+      },
+    };
+    await Trending.findByIdAndUpdate(filterTrends._id, datas, {
+      new: true,
+      runValidators: true,
+    });
 
-  // if (trends) {
-  //   if (exist) {
-  //     return res.status(200).json({
-  //       success: true,
-  //     });
-  //   }
-  //   songs.push(req.params.id);
-  //   await Trending.findByIdAndUpdate(
-  //     song._id,
-  //     {
-  //       week: songs,
-  //     },
-  //     {
-  //       new: true,
-  //       runValidators: true,
-  //     }
-  //   );
-
-  //   return res.status(200).json({
-  //     success: true,
-  //   });
-  // }
+    return res.status(200).json({
+      success: true,
+    });
+  }
   const data = {
     song: {
       week: week,

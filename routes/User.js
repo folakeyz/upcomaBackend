@@ -22,11 +22,11 @@ router
     advancedResults(User, [
       {
         path: "song",
-        select: "name album duration genre cover",
+        select: "name album duration genre cover stream",
       },
       {
         path: "likedSongs",
-        select: "name album duration genre cover",
+        select: "name album duration genre cover stream",
       },
     ]),
     getUser

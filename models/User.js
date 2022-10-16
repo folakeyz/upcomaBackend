@@ -17,6 +17,11 @@ const UserSchema = new mongoose.Schema({
     required: [true, "Please add Email"],
     unique: true,
   },
+  mobile: {
+    type: String,
+    required: [true, "Please add Mobile"],
+    unique: true,
+  },
   role: {
     type: String,
     enum: [
@@ -49,7 +54,9 @@ const UserSchema = new mongoose.Schema({
       ref: "Playlist",
     },
   ],
-
+  gender: {
+    type: String,
+  },
   photo: {
     type: String,
   },

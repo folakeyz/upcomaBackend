@@ -18,6 +18,7 @@ const connectDB = require("./config/db");
 const user = require("./routes/User");
 const song = require("./routes/Song");
 const genre = require("./routes/Genre");
+const trending = require("./routes/Trending");
 
 //load env vars
 dotenv.config({ path: "./config/.env" });
@@ -64,6 +65,7 @@ app.use(cors());
 app.use("/api/v1/auth/", user);
 app.use("/api/v1/song/", song);
 app.use("/api/v1/genre/", genre);
+app.use("/api/v1/trending/", trending);
 
 app.use(errorHandler);
 
