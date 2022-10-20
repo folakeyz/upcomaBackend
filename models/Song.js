@@ -1,5 +1,19 @@
 const mongoose = require("mongoose");
 
+const commentSchema = mongoose.Schema(
+  {
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      required: true,
+      ref: "User",
+    },
+    name: { type: String, required: true },
+    rating: { type: Number, required: true },
+    comment: { type: String, required: true },
+  },
+  { timestamps: true }
+);
+
 const SongSchema = new mongoose.Schema({
   name: {
     type: String,
@@ -33,6 +47,17 @@ const SongSchema = new mongoose.Schema({
   },
   stream: {
     type: Number,
+    default: 0,
+  },
+  comments: [commentSchema],
+  rating: {
+    type: Number,
+    required: true,
+    default: 0,
+  },
+  numReviews: {
+    type: Number,
+    required: true,
     default: 0,
   },
   createdAt: {

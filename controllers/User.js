@@ -112,6 +112,9 @@ exports.updateProfile = asyncHandler(async (req, res, next) => {
   const fieldsToUpdate = {
     firstname: req.body.firstname,
     lastname: req.body.lastname,
+    mobile: req.body.mobile,
+    gender: req.body.gender,
+    bio: req.body.bio,
   };
 
   const data = await User.findByIdAndUpdate(req.user.id, fieldsToUpdate, {
@@ -135,7 +138,7 @@ exports.uploadPhoto = asyncHandler(async (req, res, next) => {
     return next(new ErrorResponse(`Please Upload a picture`, 400));
   }
 
-  const file = req.files.file;
+  const file = req.files.photo;
 
   //Make sure the image is a photo
   if (!file.mimetype.startsWith("image")) {
@@ -153,19 +156,24 @@ exports.uploadPhoto = asyncHandler(async (req, res, next) => {
   }
 
   //crete custom filename
-  file.name = `photo_${admin._id}${path.parse(file.name).ext}`;
+  file.name = `photo_${data._id}${path.parse(file.name).ext}`;
 
-  file.mv(`${process.env.FILE_UPLOAD_PATH}/${file.name}`, async (err) => {
-    if (err) {
-      console.error(err);
-      return next(new ErrorResponse(`An error occured while uploading`, 500));
+  file.mv(
+    `${process.env.FILE_UPLOAD_PATH}/profile/${file.name}`,
+    async (err) => {
+      if (err) {
+        console.error(err);
+        return next(new ErrorResponse(`An error occured while uploading`, 500));
+      }
+      await User.findByIdAndUpdate(req.user.id, {
+        photo: `/uploads/profile/${file.name}`,
+      });
+      res.status(200).json({
+        success: true,
+        data: file.name,
+      });
     }
-    await User.findByIdAndUpdate(req.user.id, { photo: file.name });
-    res.status(200).json({
-      success: true,
-      data: file.name,
-    });
-  });
+  );
 });
 
 // @desc    Delete User

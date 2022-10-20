@@ -19,6 +19,7 @@ const user = require("./routes/User");
 const song = require("./routes/Song");
 const genre = require("./routes/Genre");
 const trending = require("./routes/Trending");
+const event = require("./routes/Event");
 
 //load env vars
 dotenv.config({ path: "./config/.env" });
@@ -66,6 +67,7 @@ app.use("/api/v1/auth/", user);
 app.use("/api/v1/song/", song);
 app.use("/api/v1/genre/", genre);
 app.use("/api/v1/trending/", trending);
+app.use("/api/v1/event/", event);
 
 app.use(errorHandler);
 
