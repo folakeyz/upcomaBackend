@@ -51,3 +51,24 @@ exports.createEvent = asyncHandler(async (req, res, next) => {
 exports.getEvents = asyncHandler(async (req, res, next) => {
   res.status(200).json(res.advancedResults);
 });
+
+// @desc    Get All Genre
+// @route   POST/api/v1/auth/
+// @access   Private/Admin
+exports.registerEvent = asyncHandler(async (req, res, next) => {
+  const event = await Event.findById(req.params.id);
+  const attend = event.attendees;
+
+  attend.push(req.user.id);
+  await Event.findByIdAndUpdate(
+    event._id,
+    { attendees: attend },
+    {
+      new: true,
+      runValidators: true,
+    }
+  );
+  res.status(200).json({
+    success: true,
+  });
+});

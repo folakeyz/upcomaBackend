@@ -18,9 +18,9 @@ const EventSchema = new mongoose.Schema({
   type: {
     type: String,
     enum: ["Paid", "Free"],
-    default: "Admin",
+    default: "Free",
   },
-  ticket: { type: Number },
+  ticket: { type: Number, default: 0 },
   cover: { type: String },
   attendees: [
     {

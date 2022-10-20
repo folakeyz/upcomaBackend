@@ -176,10 +176,10 @@ exports.updatePlay = asyncHandler(async (req, res, next) => {
 
   const trends = await Trending.find();
   const filterTrends = trends?.find((x) => x.song?.week === week);
-  const songs = filterTrends.song.songs;
-  const exist = songs.find((x) => x == req.params.id);
 
-  if (trends) {
+  if (filterTrends) {
+    const songs = filterTrends.song.songs;
+    const exist = songs.find((x) => x == req.params.id);
     if (exist) {
       return res.status(200).json({
         success: true,
@@ -209,7 +209,6 @@ exports.updatePlay = asyncHandler(async (req, res, next) => {
     },
   };
   const tren = await Trending.create(data);
-  console.log(tren);
   res.status(200).json({
     success: true,
   });
