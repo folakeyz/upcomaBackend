@@ -19,7 +19,6 @@ const UserSchema = new mongoose.Schema({
   },
   mobile: {
     type: String,
-    required: [true, "Please add Mobile"],
     unique: true,
   },
   role: {
