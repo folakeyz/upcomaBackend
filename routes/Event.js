@@ -12,7 +12,7 @@ const router = express.Router();
 
 router
   .route("/")
-  .post(protect, authorize("Admin"), createEvent)
+  .post(protect, authorize("Admin", "Producer", "Label"), createEvent)
   .get(advancedResults(Event), getEvents);
 //router.route("/:id").delete(protect, authorize("SuperAdmin"), deleteUser);
 router.route("/register/:id").put(protect, registerEvent);
