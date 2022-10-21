@@ -12,6 +12,15 @@ const UserSchema = new mongoose.Schema({
     type: String,
     required: [true, "Please add Lastname"],
   },
+  stagename: {
+    type: String,
+  },
+  perHour: { type: Number, default: 0 },
+  currency: {
+    type: String,
+    enum: ["NGN", "USD"],
+    default: "NGN",
+  },
   email: {
     type: String,
     required: [true, "Please add Email"],

@@ -115,6 +115,8 @@ exports.updateProfile = asyncHandler(async (req, res, next) => {
     mobile: req.body.mobile,
     gender: req.body.gender,
     bio: req.body.bio,
+    stagename: req.body.stagename,
+    perHour: req.body.perHour,
   };
 
   const data = await User.findByIdAndUpdate(req.user.id, fieldsToUpdate, {

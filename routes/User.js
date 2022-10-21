@@ -18,7 +18,6 @@ router
   .route("/")
   .post(createUser)
   .get(
-    protect,
     advancedResults(User, [
       {
         path: "song",
