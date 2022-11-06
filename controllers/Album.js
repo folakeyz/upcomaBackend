@@ -5,38 +5,15 @@ const asyncHandler = require("../middleware/async");
 const Song = require("../models/Song");
 const Album = require("../models/Album");
 const User = require("../models/User");
-const Trending = require("../models/Trending");
-const { getAudioDurationInSeconds } = require("get-audio-duration");
 
 // @desc    Create Song/
 // @route   POST/api/v1/auth/
 // @access   Private/Artist
 exports.createAlbum = asyncHandler(async (req, res, next) => {
   const user = await User.findById(req.user.id);
-  const file = req.files.song;
-  //Make sure the image is a photo
-const album = []
-for(var i=0;i < file.length; 1++){
-  if (!file.mimetype.startsWith("audio")) {
-    return next(new ErrorResponse(`Please Upload an audio file`, 400));
-  }
-  // Check filesize
-  if (file.size > process.env.MAX_FILE_UPLOAD) {
-    return next(
-      new ErrorResponse(
-        `Please Upload a Song less than ${process.env.MAX_FILE_UPLOAD}`,
-        400
-      )
-    );
-  }
-  //crete custom filename
-  file.name = `${user._id}_${file.name}${path.parse(file.name).ext}`;
-  file.mv(`${process.env.FILE_UPLOAD_PATH}/songs/${file.name}`, async (err) => {
-    if (err) {
-      console.error(err);
-      return next(new ErrorResponse(`An error occured while uploading`, 500));
-    }
-  });
+  const songs = JSON.parse(req.body.songs);
+  req.body.user = req.user.id;
+  req.body.song = songs;
 
   const thumb = req.files.cover;
   //Make sure the image is a photo
@@ -65,29 +42,46 @@ for(var i=0;i < file.length; 1++){
     }
   );
   req.body.cover = `/uploads/cover/${thumb.name}`;
-  req.body.song = `/uploads/songs/${file.name}`;
-  req.body.user = user._id;
-  const songDuration = await getAudioDurationInSeconds(
-    `public${req.body.song}`
-  ).then((duration) => {
-    const minutes = Math.floor(duration / 60);
-    const seconds = duration % 60;
-    function padTo2Digits(num) {
-      return num.toString().padStart(2, "0");
-    }
-    const result = `${padTo2Digits(minutes)}:${padTo2Digits(seconds)}`;
-    return result.slice(0, 5);
-  });
-  req.body.duration = songDuration;
 
-  const data = await Song.create(req.body);
-album.push(data._id)
-}
+  var duration = 0;
 
-const data = await Album.create(req.body);
+  for (var i = 0; i < songs.length; i++) {
+    const song = await Song.findById(songs[i]);
+    var time = song.duration;
+    const newT = time.replace(":", ".");
+    duration = duration + parseFloat(newT);
+  }
+  const songDuration = duration.toString();
+  req.body.duration = songDuration.replace(".", ":");
+
+  const album = await Album.create(req.body);
+
+  if (album) {
+    const comments = {
+      user: req.user.id,
+      rating: req.body.rating,
+      comment: req.body.comment,
+    };
+    album.reviews.push(comments);
+
+    album.numReviews = album.reviews.length;
+    console.log(album.reviews.length);
+    album.albumrating =
+      album.reviews.reduce((acc, item) => item.rating + acc, 0) /
+      album.reviews.length;
+
+    await album.save();
+  }
 
   res.status(201).json({
     success: true,
-    data,
+    album,
   });
+});
+
+// @desc    Get All Songs
+// @route   POST/api/v1/songs/
+// @access   Public
+exports.getAlbums = asyncHandler(async (req, res, next) => {
+  res.status(200).json(res.advancedResults);
 });

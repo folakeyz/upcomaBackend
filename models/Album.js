@@ -7,7 +7,6 @@ const commentSchema = mongoose.Schema(
       required: true,
       ref: "User",
     },
-    name: { type: String, required: true },
     rating: { type: Number, required: true },
     comment: { type: String, required: true },
   },
@@ -28,7 +27,8 @@ const AlbumSchema = new mongoose.Schema({
   song: [
     {
       type: mongoose.Schema.ObjectId,
-      ref: "Playlist",
+      ref: "Song",
+      required: [true, "Please a song"],
     },
   ],
 
@@ -38,8 +38,8 @@ const AlbumSchema = new mongoose.Schema({
     required: true,
   },
 
-  comments: [commentSchema],
-  rating: {
+  reviews: [commentSchema],
+  albumrating: {
     type: Number,
     required: true,
     default: 0,

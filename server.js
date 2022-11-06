@@ -21,6 +21,8 @@ const genre = require("./routes/Genre");
 const trending = require("./routes/Trending");
 const event = require("./routes/Event");
 const booking = require("./routes/Booking");
+const album = require("./routes/Album");
+const beat = require("./routes/Beat");
 
 //load env vars
 dotenv.config({ path: "./config/.env" });
@@ -70,6 +72,8 @@ app.use("/api/v1/genre/", genre);
 app.use("/api/v1/trending/", trending);
 app.use("/api/v1/event/", event);
 app.use("/api/v1/booking/", booking);
+app.use("/api/v1/album/", album);
+app.use("/api/v1/beat/", beat);
 
 app.use(errorHandler);
 

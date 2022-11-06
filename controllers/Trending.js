@@ -19,7 +19,7 @@ exports.getTrending = asyncHandler(async (req, res, next) => {
     select: "name album duration genre cover stream artist user",
     populate: {
       path: "user",
-      select: "firtsname lastname email bio",
+      select: "firstname lastname email bio",
     },
   });
 

@@ -20,6 +20,17 @@ exports.getUser = asyncHandler(async (req, res, next) => {
   res.status(200).json(res.advancedResults);
 });
 
+// @desc    Get All User
+// @route   POST/api/v1/auth/
+// @access   Private/Admin
+exports.getSingleUser = asyncHandler(async (req, res, next) => {
+  const data = await User.findById(req.params.id);
+  res.status(200).json({
+    success: true,
+    data,
+  });
+});
+
 // @desc    Login User
 // @route   POST/api/v1/auth/login
 // @access   Public
@@ -184,6 +195,100 @@ exports.uploadPhoto = asyncHandler(async (req, res, next) => {
 exports.deleteUser = asyncHandler(async (req, res, next) => {
   await User.findByIdAndDelete(req.params.id);
 
+  res.status(200).json({
+    success: true,
+    data: {},
+  });
+});
+
+// @desc    Delete User
+// @route   DELTE/api/v1/admin/:id
+// @access   Private/Admin
+exports.followUser = asyncHandler(async (req, res, next) => {
+  const user = await User.findById(req.params.id);
+  if (!user) {
+    return next(new ErrorResponse(`User Not Found`, 404));
+  }
+  const followers = user?.followers;
+  const exist = followers.find((x) => x == req.user.id);
+
+  if (exist) {
+    const remove = followers.filter((x) => x != req.user.id);
+    await User.findByIdAndUpdate(
+      user._id,
+      {
+        followers: remove,
+      },
+      {
+        new: true,
+        runValidators: true,
+      }
+    );
+    return res.status(200).json({
+      success: true,
+      data: "User unfollowed",
+    });
+  } else {
+    followers.push(req.user.id);
+  }
+
+  await User.findByIdAndUpdate(
+    user._id,
+    {
+      followers: followers,
+    },
+    {
+      new: true,
+      runValidators: true,
+    }
+  );
+  res.status(200).json({
+    success: true,
+    data: {},
+  });
+});
+
+// @desc    Delete User
+// @route   DELTE/api/v1/admin/:id
+// @access   Private/Admin
+exports.likeUser = asyncHandler(async (req, res, next) => {
+  const user = await User.findById(req.params.id);
+  if (!user) {
+    return next(new ErrorResponse(`User Not Found`, 404));
+  }
+  const followers = user?.likes;
+  const exist = followers.find((x) => x == req.user.id);
+
+  if (exist) {
+    const remove = followers.filter((x) => x != req.user.id);
+    await User.findByIdAndUpdate(
+      user._id,
+      {
+        likes: remove,
+      },
+      {
+        new: true,
+        runValidators: true,
+      }
+    );
+    return res.status(200).json({
+      success: true,
+      data: "User unfollowed",
+    });
+  } else {
+    followers.push(req.user.id);
+  }
+
+  await User.findByIdAndUpdate(
+    user._id,
+    {
+      likes: followers,
+    },
+    {
+      new: true,
+      runValidators: true,
+    }
+  );
   res.status(200).json({
     success: true,
     data: {},

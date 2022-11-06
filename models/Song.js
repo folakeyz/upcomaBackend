@@ -7,7 +7,6 @@ const commentSchema = mongoose.Schema(
       required: true,
       ref: "User",
     },
-    name: { type: String, required: true },
     rating: { type: Number, required: true },
     comment: { type: String, required: true },
   },
@@ -60,6 +59,12 @@ const SongSchema = new mongoose.Schema({
     required: true,
     default: 0,
   },
+  likes: [
+    {
+      type: mongoose.Schema.ObjectId,
+      ref: "User",
+    },
+  ],
   createdAt: {
     type: Date,
     default: Date.now,

@@ -7,6 +7,9 @@ const {
   updateProfile,
   uploadPhoto,
   deleteUser,
+  getSingleUser,
+  likeUser,
+  followUser,
 } = require("../controllers/User");
 const User = require("../models/User");
 const { protect, authorize } = require("../middleware/auth");
@@ -30,11 +33,16 @@ router
     ]),
     getUser
   );
-router.route("/:id").delete(protect, authorize("SuperAdmin"), deleteUser);
+router.route("/me").get(protect, getMe).put(protect, updateProfile);
+router
+  .route("/:id")
+  .delete(protect, authorize("SuperAdmin"), deleteUser)
+  .get(getSingleUser);
 
 router.route("/login").post(login);
 
-router.route("/me").get(protect, getMe).put(protect, updateProfile);
 router.route("/photo").post(protect, uploadPhoto);
+router.route("/like/:id").put(protect, likeUser);
+router.route("/follow/artist/:id").put(protect, followUser);
 
 module.exports = router;

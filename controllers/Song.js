@@ -78,6 +78,21 @@ exports.createSong = asyncHandler(async (req, res, next) => {
   req.body.duration = songDuration;
 
   const data = await Song.create(req.body);
+  if (data) {
+    const comments = {
+      user: req.user.id,
+      rating: req.body.rating,
+      comment: req.body.comment,
+    };
+    data.comments.push(comments);
+
+    data.numReviews = data.comments.length;
+    data.rating =
+      data.comments.reduce((acc, item) => item.rating + acc, 0) /
+      data.comments.length;
+
+    await data.save();
+  }
   res.status(201).json({
     success: true,
     data,
@@ -96,14 +111,18 @@ exports.getSongs = asyncHandler(async (req, res, next) => {
 // @access   Public
 exports.likeSong = asyncHandler(async (req, res, next) => {
   const user = await User.findById(req.user.id);
+  const orin = await Song.findById(req.params.id);
   if (!user) {
     return next(new ErrorResponse("Not Found", 404));
   }
   const songs = user.likedSongs;
+  const orins = orin.likes;
   const exist = songs.find((x) => x == req.params.id);
+  const existSong = orins.find((x) => x == req.user.id);
 
-  if (exist) {
+  if (exist && existSong) {
     const remove = songs.filter((x) => x != req.params.id);
+    const removeUser = orins.filter((x) => x != req.user.id);
     await User.findByIdAndUpdate(
       user._id,
       {
@@ -114,13 +133,24 @@ exports.likeSong = asyncHandler(async (req, res, next) => {
         runValidators: true,
       }
     );
+    await Song.findByIdAndUpdate(
+      orins._id,
+      {
+        likes: removeUser,
+      },
+      {
+        new: true,
+        runValidators: true,
+      }
+    );
     return res.status(200).json({
       success: true,
       data: "Removed from Favorites",
     });
-  } else {
-    songs.push(req.params.id);
   }
+
+  songs.push(req.params.id);
+  orins.push(req.user.id);
 
   await User.findByIdAndUpdate(
     user._id,
@@ -132,6 +162,17 @@ exports.likeSong = asyncHandler(async (req, res, next) => {
       runValidators: true,
     }
   );
+  const a = await Song.findByIdAndUpdate(
+    orin._id,
+    {
+      likes: orins,
+    },
+    {
+      new: true,
+      runValidators: true,
+    }
+  );
+
   res.status(201).json({
     success: true,
     data: "Added to Favorites",
@@ -211,5 +252,35 @@ exports.updatePlay = asyncHandler(async (req, res, next) => {
   const tren = await Trending.create(data);
   res.status(200).json({
     success: true,
+  });
+});
+
+// @desc    Get All Songs
+// @route   POST/api/v1/songs/
+// @access   Public
+exports.addComments = asyncHandler(async (req, res, next) => {
+  const song = await Song.findById(req.params.id);
+  if (!song) {
+    return next(new ErrorResponse("Not Found", 404));
+  }
+  const userComments = song?.comments;
+  const comments = {
+    user: req.user.id,
+    rating: req.body.rating,
+    comment: req.body.comment,
+  };
+  userComments.push(comments);
+
+  song.numReviews = song.comments.length;
+
+  song.rating =
+    song.comments.reduce((acc, item) => item.rating + acc, 0) /
+    song.comments.length;
+
+  await song.save();
+
+  res.status(200).json({
+    success: true,
+    song,
   });
 });

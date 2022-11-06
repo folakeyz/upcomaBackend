@@ -5,6 +5,7 @@ const {
   likeSong,
   likedSongs,
   updatePlay,
+  addComments,
 } = require("../controllers/Song");
 const Song = require("../models/Song");
 const { protect, authorize } = require("../middleware/auth");
@@ -19,11 +20,18 @@ router
     advancedResults(Song, [
       {
         path: "user",
-        select: "firtsname lastname email bio",
+        select: "firstname lastname email bio",
       },
       {
         path: "genre",
         select: "name ",
+      },
+      {
+        path: "comments",
+        populate: {
+          path: "user",
+          select: "firstname lastname email bio gender",
+        },
       },
     ]),
     getSongs
@@ -32,5 +40,6 @@ router
 router.route("/like").get(protect, likedSongs);
 router.route("/like/:id").put(protect, likeSong);
 router.route("/play/:id").put(updatePlay);
+router.route("/user/comments/:id").put(protect, addComments);
 
 module.exports = router;

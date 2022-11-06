@@ -56,6 +56,12 @@ const UserSchema = new mongoose.Schema({
       ref: "Song",
     },
   ],
+  likedBeats: [
+    {
+      type: mongoose.Schema.ObjectId,
+      ref: "Song",
+    },
+  ],
   playlist: [
     {
       type: mongoose.Schema.ObjectId,
@@ -72,6 +78,12 @@ const UserSchema = new mongoose.Schema({
     type: String,
   },
   followers: [
+    {
+      type: mongoose.Schema.ObjectId,
+      ref: "User",
+    },
+  ],
+  likes: [
     {
       type: mongoose.Schema.ObjectId,
       ref: "User",
