@@ -23,6 +23,7 @@ const event = require("./routes/Event");
 const booking = require("./routes/Booking");
 const album = require("./routes/Album");
 const beat = require("./routes/Beat");
+const playlist = require("./routes/Playlist");
 
 //load env vars
 dotenv.config({ path: "./config/.env" });
@@ -74,6 +75,7 @@ app.use("/api/v1/event/", event);
 app.use("/api/v1/booking/", booking);
 app.use("/api/v1/album/", album);
 app.use("/api/v1/beat/", beat);
+app.use("/api/v1/playlist/", playlist);
 
 app.use(errorHandler);
 

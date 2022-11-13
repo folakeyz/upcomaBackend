@@ -30,6 +30,14 @@ router
         path: "likedSongs",
         select: "name album duration genre cover stream",
       },
+      {
+        path: "playlist",
+        select: "name cover song",
+        populate: {
+          path: "song",
+          select: "name album duration genre cover stream song",
+        },
+      },
     ]),
     getUser
   );

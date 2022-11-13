@@ -81,11 +81,19 @@ exports.getMe = asyncHandler(async (req, res, next) => {
   const data = await User.findById(req.user.id).populate([
     {
       path: "song",
-      select: "name album duration genre cover",
+      select: "name album duration genre cover song",
     },
     {
       path: "likedSongs",
       select: "name album duration genre cover",
+    },
+    {
+      path: "playlist",
+      select: "name cover song",
+      populate: {
+        path: "song",
+        select: "name album duration genre cover stream song",
+      },
     },
   ]);
   res.status(200).json({
