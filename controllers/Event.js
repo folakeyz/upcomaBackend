@@ -3,6 +3,7 @@ const ErrorResponse = require("../utils/errorResponse");
 const asyncHandler = require("../middleware/async");
 const Event = require("../models/Event");
 const User = require("../models/User");
+const EventPayment = require("../models/EventPayment");
 
 // @desc    Create Song/
 // @route   POST/api/v1/auth/
@@ -69,6 +70,46 @@ exports.registerEvent = asyncHandler(async (req, res, next) => {
       runValidators: true,
     }
   );
+  req.body.event = event._id;
+  req.body.user = req.user.id;
+  event.type === "Paid" && (await EventPayment.create(req.body));
+  res.status(200).json({
+    success: true,
+  });
+});
+
+// @desc    Get All Genre
+// @route   POST/api/v1/auth/
+// @access   Private/Admin
+exports.getSingleEvent = asyncHandler(async (req, res, next) => {
+  const event = await Event.findById(req.params.id);
+  res.status(200).json({
+    success: true,
+    data: event,
+  });
+});
+
+// @desc    Delete User
+// @route   DELTE/api/v1/admin/:id
+// @access   Private/Admin
+exports.deleteEvent = asyncHandler(async (req, res, next) => {
+  await Event.findByIdAndDelete(req.params.id);
+
+  res.status(200).json({
+    success: true,
+    data: {},
+  });
+});
+
+// @desc    Get All Genre
+// @route   POST/api/v1/auth/
+// @access   Private/Admin
+exports.updateEvent = asyncHandler(async (req, res, next) => {
+  const event = await Event.findById(req.params.id);
+  await Event.findByIdAndUpdate(event._id, req.body, {
+    new: true,
+    runValidators: true,
+  });
   res.status(200).json({
     success: true,
   });

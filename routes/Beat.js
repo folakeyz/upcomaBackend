@@ -6,6 +6,7 @@ const {
   likedBeats,
   updatePlay,
   addComments,
+  buyBeat,
 } = require("../controllers/Beat");
 const Beat = require("../models/Beat");
 const { protect, authorize } = require("../middleware/auth");
@@ -41,5 +42,6 @@ router.route("/like").get(protect, likedBeats);
 router.route("/like/:id").put(protect, likeBeat);
 router.route("/play/:id").put(updatePlay);
 router.route("/user/comments/:id").put(protect, addComments);
+router.route("/buy/new/beat/:id").put(protect, buyBeat);
 
 module.exports = router;

@@ -24,6 +24,7 @@ const booking = require("./routes/Booking");
 const album = require("./routes/Album");
 const beat = require("./routes/Beat");
 const playlist = require("./routes/Playlist");
+const competiton = require("./routes/Competiton");
 
 //load env vars
 dotenv.config({ path: "./config/.env" });
@@ -47,7 +48,9 @@ app.use(fileupload());
 app.use(mongoSanitize());
 
 //set security headers
-app.use(helmet());
+app.use(
+  helmet({ contentSecurityPolicy: false, crossOriginEmbedderPolicy: false })
+);
 
 // Prevent XSS attacks
 app.use(xss());
@@ -76,6 +79,7 @@ app.use("/api/v1/booking/", booking);
 app.use("/api/v1/album/", album);
 app.use("/api/v1/beat/", beat);
 app.use("/api/v1/playlist/", playlist);
+app.use("/api/v1/competiton/", competiton);
 
 app.use(errorHandler);
 

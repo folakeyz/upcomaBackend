@@ -6,6 +6,7 @@ const Beat = require("../models/Beat");
 const User = require("../models/User");
 const Trending = require("../models/Trending");
 const { getAudioDurationInSeconds } = require("get-audio-duration");
+const BeatPayment = require("../models/BeatPayment");
 
 // @desc    Create Song/
 // @route   POST/api/v1/auth/
@@ -282,5 +283,32 @@ exports.addComments = asyncHandler(async (req, res, next) => {
   res.status(200).json({
     success: true,
     song,
+  });
+});
+
+// @desc    Get All Songs
+// @route   POST/api/v1/songs/
+// @access   Public
+exports.buyBeat = asyncHandler(async (req, res, next) => {
+  const user = await User.findById(req.user.id);
+  const songs = user.myBeats;
+  songs.push(req.params.id);
+
+  await User.findByIdAndUpdate(
+    user._id,
+    {
+      myBeats: songs,
+    },
+    {
+      new: true,
+      runValidators: true,
+    }
+  );
+  req.body.beat = req.params.id;
+  req.body.user = req.user.id;
+  await BeatPayment.create(req.body);
+  res.status(201).json({
+    success: true,
+    data: "Added to Favorites",
   });
 });

@@ -44,6 +44,11 @@ const UserSchema = new mongoose.Schema({
     ],
     default: "Admin",
   },
+  rank: {
+    type: String,
+    enum: ["Bronze", "Silver", "Platinum", "Gold"],
+    default: "Bronze",
+  },
   password: {
     type: String,
     required: [true, "Please add a password"],
@@ -59,7 +64,13 @@ const UserSchema = new mongoose.Schema({
   likedBeats: [
     {
       type: mongoose.Schema.ObjectId,
-      ref: "Song",
+      ref: "Beat",
+    },
+  ],
+  myBeats: [
+    {
+      type: mongoose.Schema.ObjectId,
+      ref: "Beat",
     },
   ],
   playlist: [
