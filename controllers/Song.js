@@ -4,6 +4,7 @@ const ErrorResponse = require("../utils/errorResponse");
 const asyncHandler = require("../middleware/async");
 const Song = require("../models/Song");
 const User = require("../models/User");
+const Stream = require("../models/Stream");
 const Trending = require("../models/Trending");
 const { getAudioDurationInSeconds } = require("get-audio-duration");
 
@@ -112,7 +113,7 @@ exports.getSongs = asyncHandler(async (req, res, next) => {
 exports.likeSong = asyncHandler(async (req, res, next) => {
   const user = await User.findById(req.user.id);
   const orin = await Song.findById(req.params.id);
-  if (!user) {
+  if (!orin) {
     return next(new ErrorResponse("Not Found", 404));
   }
   const songs = user.likedSongs;
@@ -203,6 +204,22 @@ exports.updatePlay = asyncHandler(async (req, res, next) => {
   const weekNumber = Math.ceil(days / 7);
   const year = currentDate.getFullYear();
   const week = `Week: ${weekNumber} ${year}`;
+  const monthNames = [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
+  ];
+
+  const month = `${monthNames[currentDate.getMonth()]}`;
 
   await Song.findByIdAndUpdate(
     song._id,
@@ -216,11 +233,39 @@ exports.updatePlay = asyncHandler(async (req, res, next) => {
   );
 
   const trends = await Trending.find();
+
   const filterTrends = trends?.find((x) => x.song?.week === week);
+  const existStream = await Stream.find({
+    month: month,
+    song: song._id,
+    year: year,
+  });
+
+  if (existStream.length > 0) {
+    const estream = {
+      stream: existStream[0].stream + 1,
+      rating: song.rating,
+    };
+    await Stream.findByIdAndUpdate(existStream[0]._id, estream, {
+      new: true,
+      runValidators: true,
+    });
+  } else {
+    const streamInfo = {
+      year: year,
+      month: month,
+      song: song._id,
+      stream: 1,
+      rating: song.rating,
+      _sid: "Song",
+    };
+    await Stream.create(streamInfo);
+  }
 
   if (filterTrends) {
     const songs = filterTrends.song.songs;
     const exist = songs.find((x) => x == req.params.id);
+
     if (exist) {
       return res.status(200).json({
         success: true,
@@ -249,7 +294,8 @@ exports.updatePlay = asyncHandler(async (req, res, next) => {
       songs: req.params.id,
     },
   };
-  const tren = await Trending.create(data);
+  await Trending.create(data);
+
   res.status(200).json({
     success: true,
   });
@@ -282,5 +328,17 @@ exports.addComments = asyncHandler(async (req, res, next) => {
   res.status(200).json({
     success: true,
     song,
+  });
+});
+
+// @desc    Delete User
+// @route   DELTE/api/v1/admin/:id
+// @access   Private/Admin
+exports.deleteSong = asyncHandler(async (req, res, next) => {
+  await Song.findByIdAndDelete(req.params.id);
+
+  res.status(200).json({
+    success: true,
+    data: {},
   });
 });

@@ -11,6 +11,24 @@ const TrendingSchema = new mongoose.Schema({
       },
     ],
   },
+  comedy: {
+    week: { type: String },
+    comedys: [
+      {
+        type: mongoose.Schema.ObjectId,
+        ref: "Comedy",
+      },
+    ],
+  },
+  DJ: {
+    week: { type: String },
+    DJs: [
+      {
+        type: mongoose.Schema.ObjectId,
+        ref: "DJ",
+      },
+    ],
+  },
   createdAt: {
     type: Date,
     default: Date.now,

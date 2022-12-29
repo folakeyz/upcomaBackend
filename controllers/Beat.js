@@ -7,6 +7,7 @@ const User = require("../models/User");
 const Trending = require("../models/Trending");
 const { getAudioDurationInSeconds } = require("get-audio-duration");
 const BeatPayment = require("../models/BeatPayment");
+const Stream = require("../models/Stream");
 
 // @desc    Create Song/
 // @route   POST/api/v1/auth/
@@ -219,6 +220,38 @@ exports.updatePlay = asyncHandler(async (req, res, next) => {
   const trends = await Trending.find();
   const filterTrends = trends?.find((x) => x.song?.week === week);
 
+  const monthNames = [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
+  ];
+
+  const month = `${monthNames[currentDate.getMonth()]}`;
+  const existStream = await Stream.find({
+    month: month,
+    song: song._id,
+    year: year,
+  });
+
+  if (existStream.length > 0) {
+    const estream = {
+      stream: existStream[0].stream + 1,
+      rating: song.rating,
+    };
+    await Stream.findByIdAndUpdate(existStream[0]._id, estream, {
+      new: true,
+      runValidators: true,
+    });
+  }
   if (filterTrends) {
     const songs = filterTrends.song.songs;
     const exist = songs.find((x) => x == req.params.id);
@@ -250,7 +283,16 @@ exports.updatePlay = asyncHandler(async (req, res, next) => {
       songs: req.params.id,
     },
   };
-  const tren = await Trending.create(data);
+  await Trending.create(data);
+  const streamInfo = {
+    year: year,
+    month: month,
+    song: song._id,
+    stream: 1,
+    rating: song.rating,
+    _sid: "Beat",
+  };
+  await Stream.create(streamInfo);
   res.status(200).json({
     success: true,
   });

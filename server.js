@@ -25,6 +25,11 @@ const album = require("./routes/Album");
 const beat = require("./routes/Beat");
 const playlist = require("./routes/Playlist");
 const competiton = require("./routes/Competiton");
+const comedy = require("./routes/Comedy");
+const dj = require("./routes/DJ");
+const stream = require("./routes/Stream");
+const banner = require("./routes/Banner");
+const analytics = require("./routes/Analytics");
 
 //load env vars
 dotenv.config({ path: "./config/.env" });
@@ -80,6 +85,11 @@ app.use("/api/v1/album/", album);
 app.use("/api/v1/beat/", beat);
 app.use("/api/v1/playlist/", playlist);
 app.use("/api/v1/competiton/", competiton);
+app.use("/api/v1/comedy/", comedy);
+app.use("/api/v1/dj/", dj);
+app.use("/api/v1/stream/", stream);
+app.use("/api/v1/banner/", banner);
+app.use("/api/v1/analytics/", analytics);
 
 app.use(errorHandler);
 

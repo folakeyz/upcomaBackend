@@ -21,7 +21,7 @@ router
     advancedResults(Beat, [
       {
         path: "user",
-        select: "firstname lastname email bio",
+        select: "firstname lastname email bio rank stagename",
       },
       {
         path: "genre",
@@ -31,7 +31,7 @@ router
         path: "comments",
         populate: {
           path: "user",
-          select: "firstname lastname email bio gender",
+          select: "firstname lastname email bio gender rank",
         },
       },
     ]),

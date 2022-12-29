@@ -82,7 +82,10 @@ exports.registerCompetiton = asyncHandler(async (req, res, next) => {
 // @route   POST/api/v1/auth/
 // @access   Private/Admin
 exports.getSingleCompetiton = asyncHandler(async (req, res, next) => {
-  const event = await Competiton.findById(req.params.id);
+  const event = await Competiton.findById(req.params.id).populate({
+    path: "competitors",
+    select: "firstname lastname email bio gender rank",
+  });
   res.status(200).json({
     success: true,
     data: event,

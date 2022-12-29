@@ -138,10 +138,7 @@ exports.updateProfile = asyncHandler(async (req, res, next) => {
     perHour: req.body.perHour,
   };
 
-  const data = await User.findByIdAndUpdate(req.user.id, fieldsToUpdate, {
-    new: true,
-    runValidators: true,
-  });
+  const data = await User.findByIdAndUpdate(req.user.id, fieldsToUpdate);
   res.status(200).json({
     success: true,
     data,
@@ -226,6 +223,7 @@ exports.followUser = asyncHandler(async (req, res, next) => {
       user._id,
       {
         followers: remove,
+        followersCount: followers.length - 1,
       },
       {
         new: true,
@@ -244,6 +242,7 @@ exports.followUser = asyncHandler(async (req, res, next) => {
     user._id,
     {
       followers: followers,
+      followersCount: followers.length,
     },
     {
       new: true,
@@ -273,6 +272,7 @@ exports.likeUser = asyncHandler(async (req, res, next) => {
       user._id,
       {
         likes: remove,
+        likesCount: followers.length - 1,
       },
       {
         new: true,
@@ -291,6 +291,7 @@ exports.likeUser = asyncHandler(async (req, res, next) => {
     user._id,
     {
       likes: followers,
+      likesCount: followers.length,
     },
     {
       new: true,

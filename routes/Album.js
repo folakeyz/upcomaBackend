@@ -14,11 +14,11 @@ router
       {
         path: "song",
         select:
-          "name artist duration cover genre stream rating comments numReviewa",
+          "name artist duration cover genre stream rating comments numReviews",
       },
       {
         path: "user",
-        select: "firstname lastname role ",
+        select: "firstname lastname role rank",
       },
     ]),
     getAlbums

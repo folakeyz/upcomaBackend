@@ -16,7 +16,13 @@ const router = express.Router();
 router
   .route("/")
   .post(protect, authorize("Admin", "Producer", "Label"), createEvent)
-  .get(advancedResults(Event), getEvents);
+  .get(
+    advancedResults(Event, {
+      path: "attendees",
+      select: "firstname lastname email bio gender rank",
+    }),
+    getEvents
+  );
 router
   .route("/:id")
   .delete(protect, authorize("Admin"), deleteEvent)

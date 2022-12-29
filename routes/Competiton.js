@@ -16,7 +16,13 @@ const router = express.Router();
 router
   .route("/")
   .post(protect, authorize("Admin", "Producer", "Label"), createCompetiton)
-  .get(advancedResults(Competiton), getCompetitons);
+  .get(
+    advancedResults(Competiton, {
+      path: "competitors",
+      select: "firstname lastname email bio gender rank",
+    }),
+    getCompetitons
+  );
 router
   .route("/:id")
   .delete(protect, authorize("Admin"), deleteCompetiton)

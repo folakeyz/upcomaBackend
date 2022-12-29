@@ -46,7 +46,7 @@ const UserSchema = new mongoose.Schema({
   },
   rank: {
     type: String,
-    enum: ["Bronze", "Silver", "Platinum", "Gold"],
+    enum: ["Bronze", "Silver", "Platinum", "Gold", "Diamond"],
     default: "Bronze",
   },
   password: {
@@ -65,6 +65,18 @@ const UserSchema = new mongoose.Schema({
     {
       type: mongoose.Schema.ObjectId,
       ref: "Beat",
+    },
+  ],
+  likedComedy: [
+    {
+      type: mongoose.Schema.ObjectId,
+      ref: "Comedy",
+    },
+  ],
+  likedDJ: [
+    {
+      type: mongoose.Schema.ObjectId,
+      ref: "DJ",
     },
   ],
   myBeats: [
@@ -100,6 +112,16 @@ const UserSchema = new mongoose.Schema({
       ref: "User",
     },
   ],
+  followersCount: {
+    type: Number,
+    required: true,
+    default: 0,
+  },
+  likesCount: {
+    type: Number,
+    required: true,
+    default: 0,
+  },
   resetPasswordToken: String,
   resetPasswordExpire: Date,
   createdAt: {
@@ -122,7 +144,7 @@ UserSchema.methods.matchPassword = async function (enteredPassword) {
 };
 //Sign JWT and return
 UserSchema.methods.getSignedJwtToken = function () {
-  return jwt.sign({ id: this._id }, process.env.JWT_SECRET, {
+  return jwt.sign({ user: this }, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIRE,
   });
 };

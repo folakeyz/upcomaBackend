@@ -6,6 +6,7 @@ const {
   likedSongs,
   updatePlay,
   addComments,
+  deleteSong,
 } = require("../controllers/Song");
 const Song = require("../models/Song");
 const { protect, authorize } = require("../middleware/auth");
@@ -20,7 +21,7 @@ router
     advancedResults(Song, [
       {
         path: "user",
-        select: "firstname lastname email bio",
+        select: "firstname lastname email bio rank",
       },
       {
         path: "genre",
@@ -30,13 +31,15 @@ router
         path: "comments",
         populate: {
           path: "user",
-          select: "firstname lastname email bio gender",
+          select: "firstname lastname email bio gender rank",
         },
       },
     ]),
     getSongs
   );
-//router.route("/:id").delete(protect, authorize("SuperAdmin"), deleteUser);
+router
+  .route("/:id")
+  .delete(protect, authorize("SuperAdmin", "Admin", "Artist"), deleteSong);
 router.route("/like").get(protect, likedSongs);
 router.route("/like/:id").put(protect, likeSong);
 router.route("/play/:id").put(updatePlay);
