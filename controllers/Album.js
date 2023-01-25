@@ -5,10 +5,13 @@ const asyncHandler = require("../middleware/async");
 const Song = require("../models/Song");
 const Album = require("../models/Album");
 const User = require("../models/User");
+const azureStorage = require("azure-storage");
+const intoStream = require("into-stream");
 
 // @desc    Create Song/
 // @route   POST/api/v1/auth/
 // @access   Private/Artist
+
 exports.createAlbum = asyncHandler(async (req, res, next) => {
   const user = await User.findById(req.user.id);
   const songs = JSON.parse(req.body.songs);
@@ -32,17 +35,24 @@ exports.createAlbum = asyncHandler(async (req, res, next) => {
   }
   //crete custom filename
   thumb.name = `${user._id}_${thumb.name}${path.parse(thumb.name).ext}`;
-  thumb.mv(
-    `${process.env.FILE_UPLOAD_PATH}/cover/${thumb.name}`,
-    async (err) => {
+  const containerName = "cover";
+  const blobService = azureStorage.createBlobService(process.env.BLOB_KEY);
+  const blobName = thumb.name;
+  const stream = intoStream(thumb.data);
+  const streamLength = thumb.data.length;
+  await blobService.createBlockBlobFromStream(
+    containerName,
+    blobName,
+    stream,
+    streamLength,
+    (err) => {
       if (err) {
-        console.error(err);
-        return next(new ErrorResponse(`An error occured while uploading`, 500));
+        return next(new ErrorResponse(err, 500));
       }
     }
   );
-  req.body.cover = `/uploads/cover/${thumb.name}`;
 
+  req.body.cover = `https://upcomastorage.blob.core.windows.net/cover/${thumb.name}`;
   var duration = 0;
 
   for (var i = 0; i < songs.length; i++) {

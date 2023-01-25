@@ -9,6 +9,10 @@ const BannerSchema = new mongoose.Schema({
     type: String,
     required: [true, "Please enter banner text"],
   },
+  backdrop: {
+    type: String,
+    required: [true, "Please enter banner image"],
+  },
 
   user: {
     type: mongoose.Schema.ObjectId,

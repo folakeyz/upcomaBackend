@@ -4,6 +4,8 @@ const asyncHandler = require("../middleware/async");
 const Event = require("../models/Event");
 const User = require("../models/User");
 const EventPayment = require("../models/EventPayment");
+const azureStorage = require("azure-storage");
+const intoStream = require("into-stream");
 
 // @desc    Create Song/
 // @route   POST/api/v1/auth/
@@ -12,7 +14,6 @@ exports.createEvent = asyncHandler(async (req, res, next) => {
   const user = await User.findById(req.user.id);
 
   const thumb = req.files.cover;
-  console.log(req.files);
   //Make sure the image is a photo
   if (!thumb.mimetype.startsWith("image")) {
     return next(new ErrorResponse(`Please Upload an Image`, 400));
@@ -29,16 +30,24 @@ exports.createEvent = asyncHandler(async (req, res, next) => {
   }
   //crete custom filename
   thumb.name = `${user._id}_${thumb.name}${path.parse(thumb.name).ext}`;
-  thumb.mv(
-    `${process.env.FILE_UPLOAD_PATH}/event/${thumb.name}`,
-    async (err) => {
+  const containerName = "cover";
+  const blobService = azureStorage.createBlobService(process.env.BLOB_KEY);
+  const blobName = thumb.name;
+  const stream = intoStream(thumb.data);
+  const streamLength = thumb.data.length;
+  await blobService.createBlockBlobFromStream(
+    containerName,
+    blobName,
+    stream,
+    streamLength,
+    (err) => {
       if (err) {
-        console.error(err);
-        return next(new ErrorResponse(`An error occured while uploading`, 500));
+        return next(new ErrorResponse(err, 500));
       }
     }
   );
-  req.body.cover = `/uploads/event/${thumb.name}`;
+
+  req.body.cover = `https://upcomastorage.blob.core.windows.net/cover/${thumb.name}`;
   req.body.user = user._id;
   const data = await Event.create(req.body);
   res.status(201).json({
@@ -112,5 +121,25 @@ exports.updateEvent = asyncHandler(async (req, res, next) => {
   });
   res.status(200).json({
     success: true,
+  });
+});
+
+// @desc    Get All Genre
+// @route   POST/api/v1/auth/
+// @access   Private/Admin
+exports.myEvents = asyncHandler(async (req, res, next) => {
+  const event = await Event.find();
+
+  const data = [];
+  for (var i = 0; i < event.length; i++) {
+    const singleEvent = event[i]?.attendees?.includes(req.user.id);
+    if (singleEvent) {
+      data.push(event[i]);
+    }
+  }
+
+  res.status(200).json({
+    success: true,
+    data,
   });
 });

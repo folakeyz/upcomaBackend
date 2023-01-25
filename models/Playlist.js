@@ -11,9 +11,14 @@ const PlaylistSchema = new mongoose.Schema({
   song: [
     {
       type: mongoose.Schema.ObjectId,
-      ref: "Song",
+      refPath: "_sid",
     },
   ],
+  _sid: {
+    type: String,
+    enum: ["Song", "DJ", "Beat", "Comedy"],
+    // default: "Song",
+  },
   user: {
     type: mongoose.Schema.ObjectId,
     ref: "User",

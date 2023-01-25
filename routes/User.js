@@ -10,6 +10,7 @@ const {
   getSingleUser,
   likeUser,
   followUser,
+  updateUserProfile,
 } = require("../controllers/User");
 const User = require("../models/User");
 const { protect, authorize } = require("../middleware/auth");
@@ -38,6 +39,10 @@ router
           select: "name album duration genre cover stream song",
         },
       },
+      {
+        path: "followers",
+        select: "firstname lastname email bio rank",
+      },
     ]),
     getUser
   );
@@ -52,5 +57,6 @@ router.route("/login").post(login);
 router.route("/photo").post(protect, uploadPhoto);
 router.route("/like/:id").put(protect, likeUser);
 router.route("/follow/artist/:id").put(protect, followUser);
+router.route("/update/user/profile/:id").put(protect, updateUserProfile);
 
 module.exports = router;

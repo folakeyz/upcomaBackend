@@ -11,6 +11,7 @@ const xss = require("xss-clean");
 const rateLimit = require("express-rate-limit");
 const hpp = require("hpp");
 const cors = require("cors");
+const socket = require("socket.io");
 const errorHandler = require("./middleware/error");
 const connectDB = require("./config/db");
 
@@ -30,6 +31,8 @@ const dj = require("./routes/DJ");
 const stream = require("./routes/Stream");
 const banner = require("./routes/Banner");
 const analytics = require("./routes/Analytics");
+const service = require("./routes/Service");
+const chat = require("./routes/Chat");
 
 //load env vars
 dotenv.config({ path: "./config/.env" });
@@ -84,12 +87,14 @@ app.use("/api/v1/booking/", booking);
 app.use("/api/v1/album/", album);
 app.use("/api/v1/beat/", beat);
 app.use("/api/v1/playlist/", playlist);
-app.use("/api/v1/competiton/", competiton);
+app.use("/api/v1/competition/", competiton);
 app.use("/api/v1/comedy/", comedy);
 app.use("/api/v1/dj/", dj);
 app.use("/api/v1/stream/", stream);
 app.use("/api/v1/banner/", banner);
 app.use("/api/v1/analytics/", analytics);
+app.use("/api/v1/service/", service);
+app.use("/api/v1/chat/", chat);
 
 app.use(errorHandler);
 
@@ -118,4 +123,29 @@ process.on("unhandledRejection", (err, promise) => {
   // close Server & exit Process
 
   server.close(() => process.exit(1));
+});
+
+const io = socket(server, {
+  cors: {
+    origin: "http://localhost:3000",
+    credentials: true,
+  },
+});
+
+global.onlineUsers = new Map();
+io.on("connection", (socket) => {
+  global.chatSocket = socket;
+  socket.on("add-user", (userId) => {
+    onlineUsers.set(userId, socket.id);
+  });
+
+  socket.on("send-msg", (data) => {
+    console.log(data.receiver, "rec");
+    const sendUserSocket = onlineUsers.get(data.receiver);
+    console.log(sendUserSocket, "send");
+    if (sendUserSocket) {
+      console.log("Yes");
+      socket.to(sendUserSocket).emit("msg-receive", data.message);
+    }
+  });
 });

@@ -6,6 +6,7 @@ const {
   deleteEvent,
   getSingleEvent,
   updateEvent,
+  myEvents,
 } = require("../controllers/Event");
 const Event = require("../models/Event");
 const { protect, authorize } = require("../middleware/auth");
@@ -23,11 +24,13 @@ router
     }),
     getEvents
   );
+router.route("/myEvents").get(protect, myEvents);
 router
   .route("/:id")
   .delete(protect, authorize("Admin"), deleteEvent)
   .get(getSingleEvent)
   .put(protect, updateEvent);
+
 router.route("/register/:id").put(protect, registerEvent);
 
 module.exports = router;

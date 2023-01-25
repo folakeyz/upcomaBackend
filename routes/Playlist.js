@@ -3,6 +3,7 @@ const {
   createPlaylist,
   getPlaylist,
   addSongToPlaylist,
+  myPlaylist,
 } = require("../controllers/Playlist");
 const { protect, authorize } = require("../middleware/auth");
 const advancedResults = require("../middleware/advancedResults");
@@ -31,6 +32,7 @@ router
     ]),
     getPlaylist
   );
+router.route("/me").get(protect, myPlaylist);
 router.route("/:id").put(protect, addSongToPlaylist);
 
 module.exports = router;

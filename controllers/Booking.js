@@ -33,3 +33,20 @@ exports.myBooking = asyncHandler(async (req, res, next) => {
     data,
   });
 });
+
+// @desc    Create Genre/
+// @route   POST/api/v1/auth/
+// @access   Public
+exports.talentBooking = asyncHandler(async (req, res, next) => {
+  const data = await Booking.find({ talent: req.user.id }).populate([
+    {
+      path: "talent",
+      select: "firstname lastname email bio rank stagename",
+    },
+    { path: "user", select: "firstname lastname email bio rank stagename" },
+  ]);
+  res.status(200).json({
+    success: true,
+    data,
+  });
+});

@@ -51,14 +51,38 @@ exports.getPlaylist = asyncHandler(async (req, res, next) => {
 exports.addSongToPlaylist = asyncHandler(async (req, res, next) => {
   const songs = JSON.parse(req.body.songs);
   const playlist = await Playlist.findById(req.params.id);
-
+  playlist._sid = req.body._sid;
   const currentPlaylist = playlist.song;
 
   currentPlaylist.push(...songs);
   await playlist.save();
-
   res.status(200).json({
     success: true,
     playlist,
+  });
+});
+
+// @desc    Create Song/
+// @route   POST/api/v1/auth/
+// @access   Private/Artist
+exports.myPlaylist = asyncHandler(async (req, res, next) => {
+  const playlist = await Playlist.find({ user: req.user.id }).populate([
+    {
+      path: "song",
+      select:
+        "name artist duration cover genre stream rating comments numReviews, user",
+      populate: {
+        path: "user",
+        select: "firstname lastname role rank",
+      },
+    },
+    {
+      path: "user",
+      select: "firstname lastname role rank",
+    },
+  ]);
+  res.status(200).json({
+    success: true,
+    data: playlist,
   });
 });

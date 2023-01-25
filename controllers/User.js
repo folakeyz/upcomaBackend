@@ -42,7 +42,12 @@ exports.login = asyncHandler(async (req, res, next) => {
     return next(new ErrorResponse("Please Provide an email and password", 400));
   }
   //check for user
-  const user = await User.findOne({ email: email }).select("+password");
+  const user = await User.findOne({ email: email })
+    .select("+password")
+    .populate({
+      path: "followers",
+      select: "firstname lastname email bio rank photo gender",
+    });
 
   if (!user) {
     return next(new ErrorResponse("Invalid credentials", 401));
@@ -88,6 +93,10 @@ exports.getMe = asyncHandler(async (req, res, next) => {
       select: "name album duration genre cover",
     },
     {
+      path: "followers",
+      select: "firstname lastname email bio rank",
+    },
+    {
       path: "playlist",
       select: "name cover song",
       populate: {
@@ -128,17 +137,10 @@ const sendTokenResponse = (user, statusCode, res) => {
 // @access   Private
 
 exports.updateProfile = asyncHandler(async (req, res, next) => {
-  const fieldsToUpdate = {
-    firstname: req.body.firstname,
-    lastname: req.body.lastname,
-    mobile: req.body.mobile,
-    gender: req.body.gender,
-    bio: req.body.bio,
-    stagename: req.body.stagename,
-    perHour: req.body.perHour,
-  };
-
-  const data = await User.findByIdAndUpdate(req.user.id, fieldsToUpdate);
+  const data = await User.findByIdAndUpdate(req.user.id, req.body, {
+    new: true,
+    runValidators: true,
+  });
   res.status(200).json({
     success: true,
     data,
@@ -301,5 +303,20 @@ exports.likeUser = asyncHandler(async (req, res, next) => {
   res.status(200).json({
     success: true,
     data: {},
+  });
+});
+
+// @desc    Update Admin Profile
+// @route   PUT/api/v1/auth/me/:id
+// @access   Private
+
+exports.updateUserProfile = asyncHandler(async (req, res, next) => {
+  const data = await User.findByIdAndUpdate(req.params.id, req.body, {
+    new: true,
+    runValidators: true,
+  });
+  res.status(200).json({
+    success: true,
+    data,
   });
 });

@@ -7,11 +7,16 @@ const User = require("../models/User");
 const Stream = require("../models/Stream");
 const Trending = require("../models/Trending");
 const { getAudioDurationInSeconds } = require("get-audio-duration");
+const azureStorage = require("azure-storage");
+const intoStream = require("into-stream");
 
 // @desc    Create Song/
 // @route   POST/api/v1/auth/
 // @access   Private/Artist
 exports.createSong = asyncHandler(async (req, res, next) => {
+  const containerName = "cover";
+  const songContainerName = "song";
+  const blobService = azureStorage.createBlobService(process.env.BLOB_KEY);
   const user = await User.findById(req.user.id);
   const file = req.files.song;
   //Make sure the image is a photo
@@ -53,29 +58,53 @@ exports.createSong = asyncHandler(async (req, res, next) => {
   }
   //crete custom filename
   thumb.name = `${user._id}_${thumb.name}${path.parse(thumb.name).ext}`;
-  thumb.mv(
-    `${process.env.FILE_UPLOAD_PATH}/cover/${thumb.name}`,
-    async (err) => {
+
+  req.body.cover = `https://upcomastorage.blob.core.windows.net/cover/${thumb.name}`;
+  req.body.song = `https://upcomastorage.blob.core.windows.net/song/${file.name}`;
+  const tempFile = `public/uploads/songs/${file.name}`;
+  req.body.user = user._id;
+
+  const blobName = thumb.name;
+  const stream = intoStream(thumb.data);
+  const streamLength = thumb.data.length;
+  await blobService.createBlockBlobFromStream(
+    containerName,
+    blobName,
+    stream,
+    streamLength,
+    (err) => {
       if (err) {
-        console.error(err);
-        return next(new ErrorResponse(`An error occured while uploading`, 500));
+        return next(new ErrorResponse(err, 500));
       }
     }
   );
-  req.body.cover = `/uploads/cover/${thumb.name}`;
-  req.body.song = `/uploads/songs/${file.name}`;
-  req.body.user = user._id;
-  const songDuration = await getAudioDurationInSeconds(
-    `public${req.body.song}`
-  ).then((duration) => {
-    const minutes = Math.floor(duration / 60);
-    const seconds = duration % 60;
-    function padTo2Digits(num) {
-      return num.toString().padStart(2, "0");
+
+  const songName = file.name;
+  const streamSong = intoStream(file.data);
+  const streamSongLength = file.data.length;
+  await blobService.createBlockBlobFromStream(
+    songContainerName,
+    songName,
+    streamSong,
+    streamSongLength,
+    (err) => {
+      if (err) {
+        return next(new ErrorResponse(err, 500));
+      }
     }
-    const result = `${padTo2Digits(minutes)}:${padTo2Digits(seconds)}`;
-    return result.slice(0, 5);
-  });
+  );
+
+  const songDuration = await getAudioDurationInSeconds(tempFile).then(
+    (duration) => {
+      const minutes = Math.floor(duration / 60);
+      const seconds = duration % 60;
+      function padTo2Digits(num) {
+        return num.toString().padStart(2, "0");
+      }
+      const result = `${padTo2Digits(minutes)}:${padTo2Digits(seconds)}`;
+      return result.slice(0, 5);
+    }
+  );
   req.body.duration = songDuration;
 
   const data = await Song.create(req.body);
@@ -94,6 +123,7 @@ exports.createSong = asyncHandler(async (req, res, next) => {
 
     await data.save();
   }
+  fs.unlink(tempFile, (err) => {});
   res.status(201).json({
     success: true,
     data,
