@@ -11,7 +11,7 @@ const intoStream = require("into-stream");
 exports.createBanner = asyncHandler(async (req, res, next) => {
   req.body.user = req.user.id;
 
-  const thumb = req.files.cover;
+  const thumb = req.files.backdrop;
   //Make sure the image is a photo
   if (!thumb.mimetype.startsWith("image")) {
     return next(new ErrorResponse(`Please Upload an Image`, 400));
