@@ -10,7 +10,7 @@ const intoStream = require("into-stream");
 // @access   Public
 exports.createBanner = asyncHandler(async (req, res, next) => {
   req.body.user = req.user.id;
-
+  console.log(req.files);
   const thumb = req.files.backdrop;
   //Make sure the image is a photo
   if (!thumb.mimetype.startsWith("image")) {
@@ -27,7 +27,7 @@ exports.createBanner = asyncHandler(async (req, res, next) => {
     );
   }
   //crete custom filename
-  thumb.name = `${user._id}_${thumb.name}${path.parse(thumb.name).ext}`;
+  thumb.name = `${req.body.user}_${thumb.name}${path.parse(thumb.name).ext}`;
   const containerName = "cover";
   const blobService = azureStorage.createBlobService(process.env.BLOB_KEY);
   const blobName = thumb.name;
