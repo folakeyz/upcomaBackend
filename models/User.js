@@ -2,6 +2,7 @@ const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const slugify = require("slugify");
+const crypto = require("crypto");
 
 const UserSchema = new mongoose.Schema({
   firstname: {
@@ -122,6 +123,12 @@ const UserSchema = new mongoose.Schema({
     required: true,
     default: 0,
   },
+  watchlist: [
+    {
+      type: mongoose.Schema.ObjectId,
+      ref: "User",
+    },
+  ],
   resetPasswordToken: String,
   resetPasswordExpire: Date,
   createdAt: {
@@ -147,6 +154,20 @@ UserSchema.methods.getSignedJwtToken = function () {
   return jwt.sign({ user: this }, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIRE,
   });
+};
+//Generate and hash password token
+UserSchema.methods.getResetPasswordToken = function () {
+  //Generate token
+  const resetToken = crypto.randomBytes(20).toString("hex");
+  //Hash token and set to resetPasswordToken field
+  this.resetPasswordToken = crypto
+    .createHash("sha256")
+    .update(resetToken)
+    .digest("hex");
+
+  //set expire
+  this.resetPasswordExpire = Date.now() + 10 * 60 * 1000;
+  return resetToken;
 };
 
 module.exports = mongoose.model("User", UserSchema);

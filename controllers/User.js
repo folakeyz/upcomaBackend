@@ -2,6 +2,10 @@ const path = require("path");
 const ErrorResponse = require("../utils/errorResponse");
 const asyncHandler = require("../middleware/async");
 const User = require("../models/User");
+const sendEmail = require("../utils/sendEmail");
+const crypto = require("crypto");
+const azureStorage = require("azure-storage");
+const intoStream = require("into-stream");
 
 // @desc    Create User/
 // @route   POST/api/v1/auth/
@@ -97,6 +101,11 @@ exports.getMe = asyncHandler(async (req, res, next) => {
       select: "firstname lastname email bio rank",
     },
     {
+      path: "watchlist",
+      select:
+        "firstname lastname email bio rank stagename photo followersCount likesCount",
+    },
+    {
       path: "playlist",
       select: "name cover song",
       populate: {
@@ -152,6 +161,8 @@ exports.updateProfile = asyncHandler(async (req, res, next) => {
 // @access   Private
 
 exports.uploadPhoto = asyncHandler(async (req, res, next) => {
+  const containerName = "cover";
+  const blobService = azureStorage.createBlobService(process.env.BLOB_KEY);
   const data = await User.findById(req.user.id);
 
   if (!req.files) {
@@ -178,22 +189,38 @@ exports.uploadPhoto = asyncHandler(async (req, res, next) => {
   //crete custom filename
   file.name = `photo_${data._id}${path.parse(file.name).ext}`;
 
-  file.mv(
-    `${process.env.FILE_UPLOAD_PATH}/profile/${file.name}`,
-    async (err) => {
+  const blobName = file.name;
+  const stream = intoStream(file.data);
+  const streamLength = file.data.length;
+  await blobService.createBlockBlobFromStream(
+    containerName,
+    blobName,
+    stream,
+    streamLength,
+    (err) => {
       if (err) {
-        console.error(err);
-        return next(new ErrorResponse(`An error occured while uploading`, 500));
+        return next(new ErrorResponse(err, 500));
       }
-      await User.findByIdAndUpdate(req.user.id, {
-        photo: `/uploads/profile/${file.name}`,
-      });
-      res.status(200).json({
-        success: true,
-        data: file.name,
-      });
     }
   );
+
+  // file.mv(
+  //   `${process.env.FILE_UPLOAD_PATH}/profile/${file.name}`,
+  //   async (err) => {
+  //     if (err) {
+  //       console.error(err);
+  //       return next(new ErrorResponse(`An error occured while uploading`, 500));
+  //     }
+
+  //   }
+  // );
+  await User.findByIdAndUpdate(req.user.id, {
+    photo: `https://upcomastorage.blob.core.windows.net/cover/${file.name}`,
+  });
+  res.status(200).json({
+    success: true,
+    data: file.name,
+  });
 });
 
 // @desc    Delete User
@@ -232,6 +259,14 @@ exports.followUser = asyncHandler(async (req, res, next) => {
         runValidators: true,
       }
     );
+    const salutation = `Dear ${user.firstname}`;
+    const content = `${req.user.firstname} unfollowed you`;
+    await sendEmail({
+      email: user.email,
+      subject: "Unfollow",
+      salutation,
+      content,
+    });
     return res.status(200).json({
       success: true,
       data: "User unfollowed",
@@ -251,6 +286,14 @@ exports.followUser = asyncHandler(async (req, res, next) => {
       runValidators: true,
     }
   );
+  const salutation = `Dear ${user.firstname}`;
+  const content = `${req.user.firstname} followed you`;
+  await sendEmail({
+    email: user.email,
+    subject: "New Follower",
+    salutation,
+    content,
+  });
   res.status(200).json({
     success: true,
     data: {},
@@ -281,6 +324,14 @@ exports.likeUser = asyncHandler(async (req, res, next) => {
         runValidators: true,
       }
     );
+    const salutation = `Dear ${user.firstname}`;
+    const content = `${req.user.firstname} un-liked you`;
+    await sendEmail({
+      email: user.email,
+      subject: "Unlike",
+      salutation,
+      content,
+    });
     return res.status(200).json({
       success: true,
       data: "User unfollowed",
@@ -300,6 +351,14 @@ exports.likeUser = asyncHandler(async (req, res, next) => {
       runValidators: true,
     }
   );
+  const salutation = `Dear ${user.firstname}`;
+  const content = `${req.user.firstname} liked you`;
+  await sendEmail({
+    email: user.email,
+    subject: "New Like",
+    salutation,
+    content,
+  });
   res.status(200).json({
     success: true,
     data: {},
@@ -318,5 +377,139 @@ exports.updateUserProfile = asyncHandler(async (req, res, next) => {
   res.status(200).json({
     success: true,
     data,
+  });
+});
+
+exports.resetPassword = asyncHandler(async (req, res, next) => {
+  //get hashed token
+
+  const resetPasswordToken = crypto
+    .createHash("sha256")
+    .update(req.params.token)
+    .digest("hex");
+
+  const user = await User.findOne({
+    resetPasswordToken,
+    resetPasswordExpire: { $gt: Date.now() },
+  });
+  if (!user) {
+    return next(new ErrorResponse("Invalid Token", 400));
+  }
+  // set new password
+  user.password = req.body.password;
+  user.resetPasswordToken = undefined;
+  user.resetPasswordTokenExpire = undefined;
+  await user.save();
+
+  sendTokenResponse(user, 200, res);
+});
+
+// @desc    Forgot Password
+// @route   POST/api/v1/auth/forgotpassword
+// @access   Public
+
+exports.forgotPassword = asyncHandler(async (req, res, next) => {
+  const user = await User.findOne({ email: req.body.email });
+
+  if (!user) {
+    return next(new ErrorResponse("User not found", 404));
+  }
+  //Get reset token
+  const resetToken = user.getResetPasswordToken();
+  await user.save({ validateBeforeSave: false });
+
+  //Create reset url
+  const resetUrl = `${req.protocol}://${req.get(
+    "host"
+  )}/resetPassword/${resetToken}`;
+
+  const salutation = `Dear ${user.firstname}`;
+  const content = `You are receiving this email because you (or someone else) has requested
+the reset of a password, Please click on this button to complete your password reset \n\n <br /><br /> <a href="${resetUrl}" style="padding:1rem;color:black;background:#ff4e02;border-radius:5px;text-decoration:none;">Reset Password</a> \n\n <br /><br /> This link would expire in 10 minutes <br /><br/> Kindly ignore if you did not initate this request`;
+
+  try {
+    await sendEmail({
+      email: user.email,
+      subject: "Password reset token",
+      salutation,
+      content,
+    });
+    res.status(200).json({ success: true, data: "Email Sent" });
+  } catch (err) {
+    console.log(err);
+    user.getResetPasswordToken = undefined;
+    user.resetPasswordTokenExpire = undefined;
+
+    await user.save({ validateBeforeSave: false });
+    return next(new ErrorResponse("Email could not be sent", 500));
+  }
+
+  res.status(200).json({
+    success: true,
+    data: user,
+  });
+});
+
+// @desc    Delete User
+// @route   DELTE/api/v1/admin/:id
+// @access   Private/Admin
+exports.Watchlist = asyncHandler(async (req, res, next) => {
+  const user = await User.findById(req.params.id);
+  if (!user) {
+    return next(new ErrorResponse(`User Not Found`, 404));
+  }
+  const followers = user?.watchlist;
+  const exist = followers.find((x) => x == req.params.id);
+
+  if (exist) {
+    const remove = followers.filter((x) => x != req.params.id);
+    await User.findByIdAndUpdate(
+      req.user.id,
+      {
+        watchlist: remove,
+      },
+      {
+        new: true,
+        runValidators: true,
+      }
+    );
+    const salutation = `Dear ${user.firstname}`;
+    const content = `${req.user.firstname} removed you from his watchlist`;
+    await sendEmail({
+      email: user.email,
+      subject: "Removed from Watchlist",
+      salutation,
+      content,
+    });
+    return res.status(200).json({
+      success: true,
+      data: "User removed from watchlist",
+    });
+  } else {
+    followers.push(req.params.id);
+  }
+
+  await User.findByIdAndUpdate(
+    req.user.id,
+    {
+      watchlist: followers,
+    },
+    {
+      new: true,
+      runValidators: true,
+    }
+  );
+  const salutation = `Dear ${user.firstname}`;
+  const content = `${req.user.firstname} added you to his watchlist`;
+  await sendEmail({
+    email: user.email,
+    subject: "Added to Watchlist",
+    salutation,
+    content,
+  });
+
+  res.status(200).json({
+    success: true,
+    data: {},
   });
 });
