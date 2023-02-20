@@ -64,11 +64,11 @@ app.use(
 app.use(xss());
 
 //Rate limiting
-const limiter = rateLimit({
-  windowMs: 60 * 60 * 1000, // 60 mins
-  max: 300,
-});
-app.use(limiter);
+// const limiter = rateLimit({
+//   windowMs: 60 * 60 * 1000, // 60 mins
+//   max: 300,
+// });
+// app.use(limiter);
 
 //prevent http param pollution
 app.use(hpp());
