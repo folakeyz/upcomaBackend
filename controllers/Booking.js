@@ -1,6 +1,8 @@
 const ErrorResponse = require("../utils/errorResponse");
 const asyncHandler = require("../middleware/async");
 const Booking = require("../models/Booking");
+const sendEmail = require("../utils/sendEmail");
+const User = require("../models/User");
 
 // @desc    Create Genre/
 // @route   POST/api/v1/auth/
@@ -8,6 +10,20 @@ const Booking = require("../models/Booking");
 exports.createBooking = asyncHandler(async (req, res, next) => {
   req.body.user = req.user.id;
   await Booking.create(req.body);
+  const user = await User.findById(req.body.talent);
+
+  //Create reset url
+  const resetUrl = `${req.protocol}://${req.get("host")}/app/musician/bookings`;
+  const salutation = `Dear ${user.firstname}`;
+  const content = `You have just been booked, check the app for more information.\n\n
+  <a href="${resetUrl}" style="padding:1rem;color:black;background:#ff4e02;border-radius:5px;text-decoration:none;">Click Here</a> \n\n
+  `;
+  await sendEmail({
+    email: user.email,
+    subject: "New Booking",
+    salutation,
+    content,
+  });
   res.status(201).json({
     success: true,
   });

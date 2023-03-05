@@ -83,7 +83,7 @@ exports.registerCompetiton = asyncHandler(async (req, res, next) => {
     }
   );
 
-  await CompetitonPayment.create(req.body);
+  // await CompetitonPayment.create(req.body);
   res.status(200).json({
     success: true,
   });
