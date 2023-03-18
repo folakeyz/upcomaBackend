@@ -13,9 +13,9 @@ exports.createService = asyncHandler(async (req, res, next) => {
   req.body.user = req.user.id;
   const user = await User.findById(req.user.id);
 
-  const thumb = req.files.cover;
-  const file = req.files.song;
-  if (thumb && file) {
+  const thumb = req.files?.cover;
+  const file = req.files?.song;
+  if (thumb) {
     //Make sure the image is a photo
     if (!thumb.mimetype.startsWith("image")) {
       return next(new ErrorResponse(`Please Upload an Image`, 400));
@@ -44,7 +44,9 @@ exports.createService = asyncHandler(async (req, res, next) => {
       }
     );
     req.body.cover = `/uploads/cover/${thumb.name}`;
+  }
 
+  if (file) {
     //Make sure the image is a photo
     if (!file.mimetype.startsWith("audio")) {
       return next(new ErrorResponse(`Please Upload an audio file`, 400));
@@ -72,20 +74,20 @@ exports.createService = asyncHandler(async (req, res, next) => {
       }
     );
     req.body.song = `/uploads/songs/${file.name}`;
-  }
 
-  const songDuration = await getAudioDurationInSeconds(
-    `public${req.body.song}`
-  ).then((duration) => {
-    const minutes = Math.floor(duration / 60);
-    const seconds = duration % 60;
-    function padTo2Digits(num) {
-      return num.toString().padStart(2, "0");
-    }
-    const result = `${padTo2Digits(minutes)}:${padTo2Digits(seconds)}`;
-    return result.slice(0, 5);
-  });
-  req.body.duration = songDuration;
+    const songDuration = await getAudioDurationInSeconds(
+      `public${req.body.song}`
+    ).then((duration) => {
+      const minutes = Math.floor(duration / 60);
+      const seconds = duration % 60;
+      function padTo2Digits(num) {
+        return num.toString().padStart(2, "0");
+      }
+      const result = `${padTo2Digits(minutes)}:${padTo2Digits(seconds)}`;
+      return result.slice(0, 5);
+    });
+    req.body.duration = songDuration;
+  }
 
   const data = await Service.create(req.body);
   res.status(201).json({

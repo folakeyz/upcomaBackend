@@ -31,7 +31,7 @@ exports.createDJ = asyncHandler(async (req, res, next) => {
   }
   //crete custom filename
   file.name = `${user._id}_${file.name}${path.parse(file.name).ext}`;
-  file.mv(`${process.env.FILE_UPLOAD_PATH}/DJ/${file.name}`, async (err) => {
+  file.mv(`${process.env.FILE_UPLOAD_PATH}/songs/${file.name}`, async (err) => {
     if (err) {
       console.error(err);
       return next(new ErrorResponse(`An error occured while uploading`, 500));
@@ -353,5 +353,17 @@ exports.addComments = asyncHandler(async (req, res, next) => {
   res.status(200).json({
     success: true,
     song,
+  });
+});
+
+// @desc    Delete User
+// @route   DELTE/api/v1/admin/:id
+// @access   Private/Admin
+exports.deleteDJ = asyncHandler(async (req, res, next) => {
+  await DJ.findByIdAndDelete(req.params.id);
+
+  res.status(200).json({
+    success: true,
+    data: {},
   });
 });

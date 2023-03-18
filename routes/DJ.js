@@ -6,6 +6,7 @@ const {
   likedDJs,
   updatePlay,
   addComments,
+  deleteDJ,
 } = require("../controllers/DJ");
 const DJ = require("../models/DJ");
 const { protect, authorize } = require("../middleware/auth");
@@ -32,7 +33,7 @@ router
     ]),
     getDJs
   );
-//router.route("/:id").delete(protect, authorize("SuperAdmin"), deleteUser);
+router.route("/:id").delete(protect, authorize("SuperAdmin"), deleteDJ);
 router.route("/like").get(protect, likedDJs);
 router.route("/like/:id").put(protect, likeDJ);
 router.route("/play/:id").put(updatePlay);

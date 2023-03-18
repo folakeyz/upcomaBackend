@@ -6,6 +6,7 @@ const {
   likedComedys,
   updatePlay,
   addComments,
+  deleteComedy,
 } = require("../controllers/Comedy");
 const Comedy = require("../models/Comedy");
 const { protect, authorize } = require("../middleware/auth");
@@ -32,7 +33,7 @@ router
     ]),
     getComedys
   );
-//router.route("/:id").delete(protect, authorize("SuperAdmin"), deleteUser);
+router.route("/:id").delete(protect, authorize("SuperAdmin"), deleteComedy);
 router.route("/like").get(protect, likedComedys);
 router.route("/like/:id").put(protect, likeComedy);
 router.route("/play/:id").put(updatePlay);

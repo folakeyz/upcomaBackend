@@ -31,15 +31,12 @@ exports.createComedy = asyncHandler(async (req, res, next) => {
   }
   //crete custom filename
   file.name = `${user._id}_${file.name}${path.parse(file.name).ext}`;
-  file.mv(
-    `${process.env.FILE_UPLOAD_PATH}/comedy/${file.name}`,
-    async (err) => {
-      if (err) {
-        console.error(err);
-        return next(new ErrorResponse(`An error occured while uploading`, 500));
-      }
+  file.mv(`${process.env.FILE_UPLOAD_PATH}/songs/${file.name}`, async (err) => {
+    if (err) {
+      console.error(err);
+      return next(new ErrorResponse(`An error occured while uploading`, 500));
     }
-  );
+  });
 
   const thumb = req.files.cover;
   //Make sure the image is a photo
@@ -358,5 +355,17 @@ exports.addComments = asyncHandler(async (req, res, next) => {
   res.status(200).json({
     success: true,
     song,
+  });
+});
+
+// @desc    Delete User
+// @route   DELTE/api/v1/admin/:id
+// @access   Private/Admin
+exports.deleteComedy = asyncHandler(async (req, res, next) => {
+  await Comedy.findByIdAndDelete(req.params.id);
+
+  res.status(200).json({
+    success: true,
+    data: {},
   });
 });
